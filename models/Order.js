@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
-const User = require('./User'); 
+const User = require('./User');
 
 const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
-    ref: 'User', // This refers to the User model
+    ref: 'User',
     required: true,
   },
   items: [
@@ -24,6 +24,10 @@ const orderSchema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  status: {
+    type: Boolean, // Changed to boolean type
+    default: false, // Pending represented by false
   },
 });
 
