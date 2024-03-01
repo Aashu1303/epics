@@ -12,8 +12,17 @@ const ensureAuthenticated = (req, res, next) => {
 };
 
 // Route to submit a new order
-//have to allow authenticates user only to make an order
-//pending
+//pending middleware use
 router.post('/submit', orderController.submitOrder);
+
+// Route to mark an order as completed (add authentication)
+//pending middleware use
+router.put('/complete/:orderId', orderController.markOrderComplete);
+
+// Route to get all pending orders (authentication needed)
+router.get('/pending', orderController.getAllPendingOrders);
+
+// Route to get all completed orders (authentication needed)
+router.get('/completed', orderController.getAllCompletedOrders);
 
 module.exports = router;
