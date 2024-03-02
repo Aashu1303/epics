@@ -1,2 +1,3 @@
 /node_modules
-.envhttps://github.com/sahilsundrani/epics.git
+.env
+/Dockerfile

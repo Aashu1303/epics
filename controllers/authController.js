@@ -6,8 +6,7 @@ const User = require('../models/User');
 
 const authController = {};
 
-// Secret key for JWT (replace with your actual secret key)
-const secretKey = 'your_secret_key';
+const secretKey = process.env.SECRET;
 
 // Google OAuth login
 authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] });
@@ -21,7 +20,24 @@ authController.googleCallback = passport.authenticate('google', {
 // Sign-up with Google OAuth
 authController.signupWithGoogle = async (req, res) => {
   try {
-    // ... (your existing code for Google signup)
+    const { id, displayName, emails } = req.user._json;
+    const email = emails[0].value;
+
+    let user = await User.findOne({ 'google.id': id });
+
+    if (!user) {
+      user = new User({
+        username: displayName,
+        email,
+        google: {
+          id,
+          name: displayName,
+          email,
+        },
+      });
+
+      await user.save();
+    }
 
     res.redirect('/dashboard');
   } catch (error) {
