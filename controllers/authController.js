@@ -10,7 +10,7 @@ const authController = {};
 const secretKey = process.env.SECRET;
 
 // Google OAuth login
-authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] },(req,res) => {
+authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] }, (req, res) => {
   console.log(req);
 });
 
@@ -109,12 +109,13 @@ authController.login = async (req, res, next) => {
       if (!user) {
         return res.status(401).json({ message: info.message }); // Use message provided by Passport
       }
-
+      
       // Generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
+      res.cookie('user_cookie', token, { httpOnly: true });
 
       // **Return the token in the response body as requested:**
-      return res.json({ token });
+      return res.json({ message: 'Logged In!' });
 
       // **Important next steps:**
       // The front-end application needs to receive and securely store this token.

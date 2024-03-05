@@ -12,7 +12,7 @@ orderController.submitOrder = async (req, res) => {
   try {
     const orderItems = req.body;
     const userId = req.user;
-
+    console.log(userId)
     // Process the order data and save it to the database
     const order = new Order({
       userId,
@@ -46,10 +46,10 @@ orderController.submitOrder = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-  
+
 orderController.markOrderComplete = async (req, res) => {
   try {
-    const orderId = req.params.orderId; 
+    const orderId = req.params.orderId;
 
     // Validate order ID (optional)
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
