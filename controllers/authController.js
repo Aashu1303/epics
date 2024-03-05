@@ -3,6 +3,7 @@ const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+require('dotenv').config();
 
 const authController = {};
 
