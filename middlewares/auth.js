@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken');
 const secretKey = process.env.SECRET;
 
 function verifyJWT(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-
+  const token = req.cookies['user_cookie'];
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized: Missing JWT token' });
   }

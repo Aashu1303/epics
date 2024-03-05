@@ -12,14 +12,12 @@ orderController.submitOrder = async (req, res) => {
   try {
     const orderItems = req.body;
     const userId = req.user;
-
     // Process the order data and save it to the database
     const order = new Order({
       userId,
       items: orderItems,
     });
     const savedOrder = await order.save();
-
     // Generate the QR code data (assuming you have already encoded the order items)
     const qrCodeData = JSON.stringify(orderItems);
 
