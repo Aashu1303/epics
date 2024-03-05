@@ -11,46 +11,45 @@ const orderController = {};
 orderController.submitOrder = async (req, res) => {
   try {
     const orderItems = req.body;
-    // Assuming the authenticated user's ID is available in req.user
-    // const userId = req.user._id;
-    const userId = "65e49e3d97d89e620776a170";
+    const userId = req.user;
+
     // Process the order data and save it to the database
     const order = new Order({
       userId,
       items: orderItems,
     });
+    const savedOrder = await order.save();
 
-    await order.save();
-    await User.findByIdAndUpdate(userId, { $push: { orders: order } });
-    // Process the order data as needed (you can save it to the database, etc.)
-
-    const timestamp = Date.now();
-
-    // Generate a QR code with the order payload
+    // Generate the QR code data (assuming you have already encoded the order items)
     const qrCodeData = JSON.stringify(orderItems);
-    const qrCodePath = path.join(__dirname, `../public/qrcodes/order_${timestamp}.png`);
 
-    await qrcode.toFile(qrCodePath, qrCodeData);
+    // Generate the QR code image in memory
+    const qrCodeBuffer = await qrcode.toBuffer(qrCodeData);
 
-    // Send a response indicating that the order was successfully submitted
-    //res.json({ message: 'Order submitted successfully', qrCodePath });
-    const qrCodeBase64 = fs.readFileSync(qrCodePath, { encoding: 'base64' });
+    // Encode the QR code buffer to base64 string
+    const qrCodeBase64 = qrCodeBuffer.toString('base64');
 
-    // Send a response with the order details and base64 encoded QR code
-    res.json({
+    // Update the order document with the base64 encoded QR code data
+    const updatedOrder = await Order.findByIdAndUpdate(
+      savedOrder._id,
+      { $set: { qrCodeData: qrCodeBase64 } }, // Update the 'qrCodeData' field
+      { new: true } // Return the updated document
+    );
+
+    return res.json({
       message: 'Order submitted successfully',
-      orderDetails: order,
+      orderDetails: updatedOrder,
       qrCodeData: qrCodeBase64,
     });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
+  
 orderController.markOrderComplete = async (req, res) => {
   try {
-    const orderId = req.params.orderId; // Assuming order ID is in URL parameter
+    const orderId = req.params.orderId; 
 
     // Validate order ID (optional)
     if (!mongoose.Types.ObjectId.isValid(orderId)) {

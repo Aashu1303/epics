@@ -6,11 +6,12 @@ const User = require('../models/User');
 
 const authController = {};
 
-
 const secretKey = process.env.SECRET;
 
 // Google OAuth login
-authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] });
+authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] },(req,res) => {
+  console.log(req);
+});
 
 // Google OAuth callback
 authController.googleCallback = passport.authenticate('google', {
@@ -51,7 +52,6 @@ authController.signupWithGoogle = async (req, res) => {
 authController.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    // console.log(username, password);
     // Check if the email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -78,7 +78,7 @@ authController.signup = async (req, res) => {
     const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
 
     // Set the token in a cookie
-    res.cookie('your_token_cookie_name', token, { httpOnly: true });
+    res.cookie('user_cookie', token, { httpOnly: true });
 
     // Send a JSON response with user information and token
     return res.json({
@@ -99,44 +99,39 @@ authController.signup = async (req, res) => {
 // Local login
 authController.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    // Use Passport.authenticate middleware for local strategy
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return next(err); // Pass error to Express's error handler
+      }
 
-    // Check if the user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Email not Registered' });
-    }
+      if (!user) {
+        return res.status(401).json({ message: info.message }); // Use message provided by Passport
+      }
 
-    // Compare the password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Incorrect Password' });
-    }
+      // Generate and set the JWT token
+      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
+      res.cookie('user_cookie', token, { httpOnly: true });
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-
-    // Set the token in a cookie
-    res.cookie('your_token_cookie_name', token, { httpOnly: true });
-
-    // Redirect to dashboard or send a response as needed
-    return res.json({
-      user: {
-        username: user.username,
-        email: user.email,
-        // Add other user information as needed
-      },
-      token,
-    });
+      // Return user information and token in response
+      return res.json({
+        user: {
+          username: user.username,
+          email: user.email,
+          // Add other user information as needed
+        },
+        token,
+      });
+    })(req, res, next); // Call with Express callback pattern
   } catch (error) {
     console.error(error);
-    res.status(500).send('Internal Server Error');
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
 // Logout
 authController.logout = (req, res) => {
-  res.clearCookie('your_token_cookie_name');
+  res.clearCookie('user_cookie');
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ message: 'Error destroying session' });

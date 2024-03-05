@@ -1,9 +1,42 @@
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const refresh = require('jsonwebtoken-refresh');
+const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
-require('dotenv').config(); // Load environment variables from .env file
+const bcrypt = require('bcrypt');
+require('dotenv').config();
 
-// Configure Google OAuth strategy for Passport
+// Configure Local Strategy
+passport.use(new LocalStrategy({
+  usernameField: 'email', // Customize if using a different field for username
+  passwordField: 'password',
+}, async (email, password, done) => {
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    // Check if user exists
+    if (!user) {
+      return done(null, false, { message: 'Incorrect email or password' });
+    }
+
+    // Compare password hashes using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    // Check if password matches
+    if (!isPasswordValid) {
+      return done(null, false, { message: 'Incorrect email or password' });
+    }
+
+    // Return the user object
+    return done(null, user);
+  } catch (error) {
+    return done(error);
+  }
+}));
+
+// Configure Google OAuth strategy
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,

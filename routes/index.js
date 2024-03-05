@@ -3,15 +3,7 @@ const router = express.Router();
 const authRoutes = require('./auth'); // Assuming auth.js is in the same folder
 const orderRoutes = require('./order'); // Import the order route
 const userRoutes = require('./user'); // Import the user route
-// Middleware to ensure authentication
-const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next(); // User is authenticated, continue to the next middleware
-  }
-
-  // Redirect to login page if not authenticated
-  res.redirect('/auth/login');
-};
+const ensureAuthenticated = require('../middlewares/auth');
 
 // Dashboard route (requires authentication)
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
@@ -36,7 +28,7 @@ router.get('/', (req, res) => {
 
 // Include authentication routes
 router.use('/auth', authRoutes);
-router.use('/order', orderRoutes);
-router.use('/users', userRoutes);
+router.use('/order',ensureAuthenticated, orderRoutes);
+router.use('/users', ensureAuthenticated, userRoutes);
 
 module.exports = router;
