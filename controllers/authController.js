@@ -6,6 +6,7 @@ const User = require('../models/User');
 
 const authController = {};
 
+
 const secretKey = process.env.SECRET;
 
 // Google OAuth login
