@@ -110,19 +110,17 @@ authController.login = async (req, res, next) => {
         return res.status(401).json({ message: info.message }); // Use message provided by Passport
       }
 
-      // Generate and set the JWT token
+      // Generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-      res.cookie('user_cookie', token, { httpOnly: true });
 
-      // Return user information and token in response
-      return res.json({
-        user: {
-          username: user.username,
-          email: user.email,
-          // Add other user information as needed
-        },
-        token,
-      });
+      // **Return the token in the response body as requested:**
+      return res.json({ token });
+
+      // **Important next steps:**
+      // The front-end application needs to receive and securely store this token.
+      // Consider using secure storage mechanisms like local storage with the `HttpOnly` flag or browser storage APIs like `IndexedDB` or `Web Storage`.
+      // Remember that storing tokens in local storage or cookies introduces security risks and needs careful handling.
+      // Always prioritize implementing secure authentication measures like HTTPS on your server.
     })(req, res, next); // Call with Express callback pattern
   } catch (error) {
     console.error(error);
