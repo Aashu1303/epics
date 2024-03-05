@@ -7,7 +7,7 @@ const helmet = require('helmet'); // Security features // need exploration
 const Joi = require('joi'); // Input validation //need fixtures
 const rateLimiter = require('./middlewares/rateLimiter'); //working
 const { connectToDatabase } = require('./config/database');
-
+const cors = require('cors');
 // Error handling middleware (add this at the top)
 const handleError = (err, req, res, next) => {
   console.error(err.stack); // Log error details for debugging
@@ -19,7 +19,7 @@ const app = express();
 
 // Helmet for various security features
 app.use(helmet());
-
+app.use(cors());
 // JSON parsing
 app.use(express.json());
 
