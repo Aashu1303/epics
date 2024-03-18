@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     name: String,
     email: String,
   },
+  bucket: [],
   orders: [Order.schema], 
   createdAt: {
     type: Date,
