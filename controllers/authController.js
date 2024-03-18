@@ -114,7 +114,8 @@ authController.login = async (req, res, next) => {
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
       res.cookie('user_cookie', token, { httpOnly: true });
       // **Return the token in the response body as requested:**
-      return res.json({ token });
+      const userId = user._id
+      return res.json({ token, userId });
 
 
     })(req, res, next); // Call with Express callback pattern

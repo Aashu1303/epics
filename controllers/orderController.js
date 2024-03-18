@@ -33,7 +33,6 @@ orderController.submitOrder = async (req, res) => {
       { $set: { qrCodeData: qrCodeBase64 } }, // Update the 'qrCodeData' field
       { new: true } // Return the updated document
     );
-
     return res.json({
       message: 'Order submitted successfully',
       orderDetails: updatedOrder,

@@ -29,6 +29,6 @@ router.get('/', (req, res) => {
 // Include authentication routes
 router.use('/auth', authRoutes);
 router.use('/order',ensureAuthenticated, orderRoutes);
-router.use('/users', ensureAuthenticated, userRoutes);
+router.use('/users', ensureAuthenticated,userRoutes);
 
 module.exports = router;
