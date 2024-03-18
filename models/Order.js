@@ -29,9 +29,14 @@ const orderSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  service: {
+    type: String,
+    enum:["pending", "completed"], 
+    default: "pending"
+  },
   status: {
-    type: Boolean, // Changed to boolean type
-    default: false, // Pending represented by false
+    type: String,
+    enum:["accepted","on-hold", "rejected"],
   },
 });
 

@@ -11,11 +11,9 @@ userController.getUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Select specific user information to expose (e.g., exclude password)
     const userProfile = {
       username: user.username,
       email: user.email,
-      // Add other relevant user profile details
     };
 
     res.json(userProfile);

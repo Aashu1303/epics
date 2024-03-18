@@ -1,28 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
-
-const ensureAuthenticated = (req, res, next) => {
-    console.log(req.headers.Authorization);
-    if (req.isAuthenticated()) {
-      return next(); // User is authenticated, continue to the next middleware
-    }
-    // Redirect to login page if not authenticated
-    res.redirect('/auth/login');
-};
+const ensureAuthenticated = require('../middlewares/auth');
 
 // Route to submit a new order
-//pending middleware use
-router.post('/submit', orderController.submitOrder);
+router.put('/add-to-bucket', ensureAuthenticated, orderController.addToBucket);
+router.delete('/remove-from-bucket/:index', ensureAuthenticated, orderController.removeFromBucket);
+
+router.post('/submit', ensureAuthenticated, orderController.submitOrder);
 
 // Route to mark an order as completed (add authentication)
-//pending middleware use
-router.put('/complete/:orderId', orderController.markOrderComplete);
+router.put('/complete/:orderId', ensureAuthenticated, orderController.markOrderComplete);
 
 // Route to get all pending orders (authentication needed)
-router.get('/pending', orderController.getAllPendingOrders);
+router.get('/pending', ensureAuthenticated, orderController.getAllPendingOrders);
 
 // Route to get all completed orders (authentication needed)
-router.get('/completed', orderController.getAllCompletedOrders);
+router.get('/completed', ensureAuthenticated, orderController.getAllCompletedOrders);
 
 module.exports = router;

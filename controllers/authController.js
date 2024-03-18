@@ -78,11 +78,8 @@ authController.signup = async (req, res) => {
     // Generate a JWT token
     const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
 
-    // Set the token in a cookie
-    res.cookie('user_cookie', token, { httpOnly: true });
-
     // Send a JSON response with user information and token
-    return res.json({
+    return res.status(200).json({
       user: {
         username: newUser.username,
         email: newUser.email,
@@ -112,10 +109,8 @@ authController.login = async (req, res, next) => {
 
       // Generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-      res.cookie('user_cookie', token, { httpOnly: true });
       // **Return the token in the response body as requested:**
-      return res.json({ token });
-
+      return res.status(201).json({ token });
 
     })(req, res, next); // Call with Express callback pattern
   } catch (error) {
