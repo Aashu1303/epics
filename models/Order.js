@@ -37,6 +37,10 @@ const orderSchema = new Schema({
   status: {
     type: String,
     enum:["accepted","on-hold", "rejected"],
+    default: "on-hold"
+  },
+  qrCodeData: {
+    type: String,  // Data type for storing base64-encoded QR code
   },
 });
 

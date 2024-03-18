@@ -4,7 +4,7 @@ const userController = {};
 
 userController.getUserProfile = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming user ID is accessible from the middleware
+    const userId = req.user.userId; // Assuming user ID is accessible from the middleware
 
     const user = await User.findById(userId);
     if (!user) {
