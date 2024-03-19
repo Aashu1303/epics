@@ -7,6 +7,10 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 
 const orderController = {};
+
+
+
+
 orderController.addToBucket = async(req, res) => {
   try {
     const userId = req.user.userId;
@@ -104,12 +108,18 @@ orderController.submitOrder = async (req, res) => {
       userId,
       items: orderItems,
     });
+    
     const savedOrder = await order.save();
     const qrCodeData = JSON.stringify(order._id); // qr generation
     const qrCodeBuffer = await qrcode.toBuffer(qrCodeData);
     const qrCodeBase64 = qrCodeBuffer.toString('base64'); // Encode the QR code buffer to base64 
 
     savedOrder.qrCodeData = qrCodeBase64;
+
+    user.orders.push(order._id);
+    user.bucket = [];
+    user.save();
+
     savedOrder.save();
     return res.status(200).json({
       message: 'Order submitted successfully',
@@ -127,6 +137,7 @@ orderController.cancelOrder = async (req, res) => {
 
 } 
 
+// pending
 orderController.markOrderComplete = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -153,6 +164,77 @@ orderController.markOrderComplete = async (req, res) => {
   }
 };
 
+// look for improvements
+orderController.acceptRejectOrder = async (req, res) => {
+  async function rejectOrder(orderId, res) {
+    try {
+      const deletedOrder = await Order.findByIdAndDelete(orderId);
+      if (!deletedOrder) {
+        console.log('Order not found');
+        return res.status(404).json({ error: "Order not found" });
+      }
+  
+      const user = await User.findById(deletedOrder.userId);
+      if (user) {
+        user.orders = user.orders.filter(id => id.toString() !== orderId);
+        await user.save();
+        console.log('User updated and associated order removed:', user);
+      } else {
+        console.log('User not found');
+      }
+  
+      return res.status(200).json({ message: "Order rejected" });
+    } catch (error) {
+      console.error('Error deleting order or finding user:', error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+  
+  async function acceptOrder(orderId) {
+    try {
+      const updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { $set: { status: "accepted" } },
+        { new: true }
+      );
+  
+      if (updatedOrder) {
+        return res.status(200).json({ message: "Order status updated successfully" });
+      } else {
+        return res.status(404).json({ error: "Order not found" });
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId);
+    
+    const orderId = req.params.orderId;
+    const orderStatus = req.params.orderStatus;
+
+    if (orderStatus === "accept" || orderStatus === "reject"){
+      if (user && user.role === "admin") {
+        if (orderStatus === "reject") {
+          await rejectOrder(orderId, res);
+        } else {
+          await acceptOrder(orderId, res);
+        }
+      }else{
+        return res.status(400).json({ error: "Admin role not verified" });
+      }
+    }else{
+      return res.status(400).json({ error: "Invalid Status" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+//pending
 orderController.getAllPendingOrders = async (req, res) => {
   try {
     const pendingOrders = await Order.find({ status: false }); // Assuming boolean status
@@ -163,6 +245,7 @@ orderController.getAllPendingOrders = async (req, res) => {
   }
 };
 
+// pending
 orderController.getAllCompletedOrders = async (req, res) => {
   try {
     const completedOrders = await Order.find({ status: true }); // Assuming boolean status
