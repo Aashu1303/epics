@@ -3,19 +3,20 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const ensureAuthenticated = require('../middlewares/auth');
 
-// Route to submit a new order
+// for user access
 router.put('/add-to-bucket', ensureAuthenticated, orderController.addToBucket);
-router.delete('/remove-from-bucket/:index', ensureAuthenticated, orderController.removeFromBucket);
-
+router.put('/remove-bucket-item/:index', ensureAuthenticated, orderController.removeFromBucket);
+router.get('/fetch-bucket', ensureAuthenticated, orderController.fetchBucket);
+router.put('/edit-bucket-item/:index', ensureAuthenticated, orderController.editItemFromBucket);
 router.post('/submit', ensureAuthenticated, orderController.submitOrder);
+router.post('/cancel', ensureAuthenticated, orderController.cancelOrder);
 
-// Route to mark an order as completed (add authentication)
+// for admin access
+router.put('/change-status/:orderId/:orderStatus', ensureAuthenticated, orderController.acceptRejectOrder);
 router.put('/complete/:orderId', ensureAuthenticated, orderController.markOrderComplete);
 
-// Route to get all pending orders (authentication needed)
 router.get('/pending', ensureAuthenticated, orderController.getAllPendingOrders);
 
-// Route to get all completed orders (authentication needed)
 router.get('/completed', ensureAuthenticated, orderController.getAllCompletedOrders);
 
 module.exports = router;

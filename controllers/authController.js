@@ -52,7 +52,7 @@ authController.signupWithGoogle = async (req, res) => {
 // Local signup
 authController.signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
     // Check if the email is already registered
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -71,6 +71,7 @@ authController.signup = async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      role
     });
 
     await newUser.save();

@@ -14,13 +14,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user"
+  },
   google: {
     id: String,
     name: String,
     email: String,
   },
   bucket: [],
-  orders: [Order.schema], 
+  orders: [{
+    type: mongoose.Schema.Types.ObjectId,
+		ref: "Order",
+  }], 
   createdAt: {
     type: Date,
     default: Date.now,

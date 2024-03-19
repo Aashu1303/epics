@@ -5,7 +5,7 @@ const userController = {};
 userController.getUserProfile = async (req, res) => {
   try {
     const userId = req.user.userId; // Assuming user ID is accessible from the middleware
-    console.log(userId);
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
