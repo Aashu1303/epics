@@ -3,13 +3,11 @@ const path = require('path');
 const jsQR = require('jsqr');
 const fs = require('fs');
 
+
 const Order = require('../models/Order');
 const User = require('../models/User');
 
 const orderController = {};
-
-
-
 
 orderController.addToBucket = async(req, res) => {
   try {
@@ -132,32 +130,54 @@ orderController.submitOrder = async (req, res) => {
   }
 };
 
-// pending
 orderController.cancelOrder = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    if (!userId) return res.status(400).json({message:"User doesn't exist"});
 
-} 
+    const orderId = req.params.orderId;
+    // if (!orderId) return res.status(400).json({message:"Order doesn't exist"});
+
+    const order = await Order.findOne({
+      orderId,
+      userId,
+      status: "on-hold",
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order can't be cancelled" });
+    }
+
+    await Order.findByIdAndDelete(order.id);
+
+    return res.status(200).json({ message: 'Order deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 // pending
 orderController.markOrderComplete = async (req, res) => {
   try {
+    const userId = req.user.userId;
+    const admin = await User.findById(userId);
     const orderId = req.params.orderId;
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({ message: 'Invalid order ID' });
-    }
+    if (!admin) return res.status(404).json({message:"No admin found"});
+
+    if(admin.role !== "admin") return res.status(404).json({message: "No admin access for this operation"});
 
     const order = await Order.findByIdAndUpdate(
       orderId,
-      { status: true },
-      { new: true } 
+      { service: "completed" },
     );
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-
-    res.status(200).json({ message: 'Order marked as completed successfully' });
+    return res.status(200).json({ message: 'Order served' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -237,7 +257,8 @@ orderController.acceptRejectOrder = async (req, res) => {
 //pending
 orderController.getAllPendingOrders = async (req, res) => {
   try {
-    const pendingOrders = await Order.find({ status: false }); // Assuming boolean status
+    const userId = req.user.userId;
+    const pendingOrders = await Order.find({ userId , service: "pending" }); // Assuming boolean status
     res.json(pendingOrders);
   } catch (error) {
     console.error(error);
@@ -248,7 +269,8 @@ orderController.getAllPendingOrders = async (req, res) => {
 // pending
 orderController.getAllCompletedOrders = async (req, res) => {
   try {
-    const completedOrders = await Order.find({ status: true }); // Assuming boolean status
+    const userId = req.user.userId;
+    const completedOrders = await Order.find({ userId, status: true }); // Assuming boolean status
     res.json(completedOrders);
   } catch (error) {
     console.error(error);

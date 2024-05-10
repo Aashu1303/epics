@@ -9,14 +9,13 @@ router.put('/remove-bucket-item/:index', ensureAuthenticated, orderController.re
 router.get('/fetch-bucket', ensureAuthenticated, orderController.fetchBucket);
 router.put('/edit-bucket-item/:index', ensureAuthenticated, orderController.editItemFromBucket);
 router.post('/submit', ensureAuthenticated, orderController.submitOrder);
-router.post('/cancel', ensureAuthenticated, orderController.cancelOrder);
+router.post('/cancel/:id', ensureAuthenticated, orderController.cancelOrder);
 
 // for admin access
 router.put('/change-status/:orderId/:orderStatus', ensureAuthenticated, orderController.acceptRejectOrder);
 router.put('/complete/:orderId', ensureAuthenticated, orderController.markOrderComplete);
 
 router.get('/pending', ensureAuthenticated, orderController.getAllPendingOrders);
-
 router.get('/completed', ensureAuthenticated, orderController.getAllCompletedOrders);
 
 module.exports = router;
