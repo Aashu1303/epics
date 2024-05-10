@@ -24,6 +24,15 @@ const userSchema = new mongoose.Schema({
     name: String,
     email: String,
   },
+  contact: {
+    type: String,
+    validate: {
+      validator: function(v) {
+        return /^\d{10}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid Indian phone number!`
+    },
+  },
   bucket: [],
   orders: [{
     type: mongoose.Schema.Types.ObjectId,
