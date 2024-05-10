@@ -52,14 +52,16 @@ authController.signupWithGoogle = async (req, res) => {
 // Local signup
 authController.signup = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, contact } = req.body;
     // Check if the email is already registered
+    if (!username || !email || !contact || !password)  {
+      return res.status(500).json({ message:"missing fields"});
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email is already registered' });
     }
-
-    // Ensure the password is present and a string before hashing
+    console.log(username, email, password, contact)
     if (!password || typeof password != 'string') {
       return res.status(400).json({ message: 'Invalid password' });
     }
@@ -71,20 +73,19 @@ authController.signup = async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      contact,
       role
     });
 
     await newUser.save();
 
-    // Generate a JWT token
     const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
 
-    // Send a JSON response with user information and token
     return res.status(200).json({
       user: {
         username: newUser.username,
         email: newUser.email,
-        // Add other user information as needed
+        contact,
       },
       token,
     });
@@ -101,21 +102,18 @@ authController.login = async (req, res, next) => {
     // Use Passport.authenticate middleware for local strategy
     passport.authenticate('local', (err, user, info) => {
       if (err) {
-        return next(err); // Pass error to Express's error handler
+        return next(err);
       }
 
       if (!user) {
-        return res.status(401).json({ message: info.message }); // Use message provided by Passport
+        return res.status(401).json({ message: info.message }); 
       }
 
-      // Generate a JWT token
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-      // **Return the token in the response body as requested:**
-      return res.status(201).json({ token });
 
-    })(req, res, next); // Call with Express callback pattern
+      return res.status(201).json({ token });
+    })(req, res, next);
   } catch (error) {
-    // console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

@@ -157,7 +157,6 @@ orderController.cancelOrder = async (req, res) => {
   }
 };
 
-// pending
 orderController.markOrderComplete = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -258,8 +257,13 @@ orderController.acceptRejectOrder = async (req, res) => {
 orderController.getAllPendingOrders = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const pendingOrders = await Order.find({ userId , service: "pending" }); // Assuming boolean status
-    res.json(pendingOrders);
+    const admin = await User.findOne({ _id: userId, role: "admin"});
+    if (admin) {
+      const pendingOrders = await Order.find({ service: "pending" }); 
+      return res.json(pendingOrders);
+    }
+    const pendingOrders = await Order.find({ userId , service: "pending" });
+    return res.json(pendingOrders);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -270,8 +274,13 @@ orderController.getAllPendingOrders = async (req, res) => {
 orderController.getAllCompletedOrders = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const completedOrders = await Order.find({ userId, status: true }); // Assuming boolean status
-    res.json(completedOrders);
+    const admin = await User.findOne({ _id: userId, role: "admin"});
+    if (admin) {
+      const pendingOrders = await Order.find({ service: "completed" }); 
+      return res.json(pendingOrders);
+    }
+    const pendingOrders = await Order.find({ userId , service: "completed" });
+    return res.json(pendingOrders);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
