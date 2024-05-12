@@ -18,4 +18,5 @@ router.put('/complete/:orderId', ensureAuthenticated, orderController.markOrderC
 router.get('/pending', ensureAuthenticated, orderController.getAllPendingOrders);
 router.get('/completed', ensureAuthenticated, orderController.getAllCompletedOrders);
 
+
 module.exports = router;

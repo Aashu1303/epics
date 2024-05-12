@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const authRoutes = require('./auth'); // Assuming auth.js is in the same folder
-const orderRoutes = require('./order'); // Import the order route
-const userRoutes = require('./user'); // Import the user route
+const authRoutes = require('./auth'); 
+const orderRoutes = require('./order');
+const userRoutes = require('./user');
+const laundryRoutes = require('./laundry');
 const ensureAuthenticated = require('../middlewares/auth');
 
-// Dashboard route (requires authentication)
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
-  // Access user information from the session
   const user = req.user;
 
-  // Assuming you have added firstName and lastName to your User schema
   const responseData = {
     username: user.username,
     email: user.email,
@@ -30,5 +28,6 @@ router.get('/', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/order', orderRoutes);
 router.use('/users', userRoutes);
+router.use('/laundry', laundryRoutes);
 
 module.exports = router;

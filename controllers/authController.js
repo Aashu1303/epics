@@ -4,18 +4,18 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
+const categories = require('../utils/categories')
 require('dotenv').config();
 
 const authController = {};
-
 const secretKey = process.env.SECRET;
 
 // Local signup
 authController.signup = async (req, res) => {
   try {
-    const { username, email, password, contact} = req.body;
+    const { username, email, password, contact, room} = req.body;
     // Check if the email is already registered
-    if (!username || !email || !contact || !password)  {
+    if (!username || !email || !contact || !password || !room)  {
       return res.status(500).json({ message:"missing fields"});
     }
     const existingUser = await User.findOne({ email });
@@ -35,6 +35,7 @@ authController.signup = async (req, res) => {
       email,
       password: hashedPassword,
       contact,
+      room,
     });
 
     await newUser.save();
@@ -55,33 +56,9 @@ authController.signup = async (req, res) => {
   }
 };
 
-
-// Local login
-authController.login = async (req, res, next) => {
-  try {
-    // Use Passport.authenticate middleware for local strategy
-    passport.authenticate('local', (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-
-      if (!user) {
-        return res.status(401).json({ message: info.message }); 
-      }
-
-      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
-
-      return res.status(201).json({ token });
-    })(req, res, next);
-  } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-
 authController.adminSignup = async (req, res) => {
   try {
     const { username, email, password, contact} = req.body;
-    // Check if the email is already registered
     if (!username || !email || !contact || !password)  {
       return res.status(500).json({ message:"missing fields"});
     }
@@ -89,21 +66,20 @@ authController.adminSignup = async (req, res) => {
     if (existingAdmin) {
       return res.status(400).json({ message: 'Email is already registered' });
     }
-    console.log(username, email, password, contact)
-    if (!password || typeof password != 'string') {
+
+    if (typeof password != 'string') {
       return res.status(400).json({ message: 'Invalid password' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new user
     const newAdmin = new Admin({
       username,
       email,
       password: hashedPassword,
       contact,
+      categories,
     });
-
+    
     await newAdmin.save();
 
     const token = jwt.sign({ userId: newAdmin._id }, secretKey, { expiresIn: '1d' });
@@ -122,12 +98,28 @@ authController.adminSignup = async (req, res) => {
   }
 };
 
+authController.login = async (req, res, next) => {
+  try {
+    passport.authenticate('user-login', (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
 
-// Local login
+      if (!user) {
+        return res.status(401).json({ message: info.message }); 
+      }
+
+      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
+
+      return res.status(201).json({ token });
+    })(req, res, next);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 authController.adminLogin = async (req, res, next) => {
   try {
-    // Use Passport.authenticate middleware for local strategy
-    passport.authenticate('local', (err, admin, info) => {
+    passport.authenticate('admin-login', (err, admin, info) => {
       if (err) {
         return next(err);
       }
@@ -144,7 +136,6 @@ authController.adminLogin = async (req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
 // Logout
 authController.logout = (req, res) => {
   res.clearCookie('user_cookie');
