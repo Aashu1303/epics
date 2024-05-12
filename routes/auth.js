@@ -4,17 +4,13 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const passport = require('passport');
 
-// Google OAuth login
-router.get('/google', authController.googleLogin);
-
-// Google OAuth callback
-router.get('/google/callback', authController.googleCallback, authController.signupWithGoogle);
-
 // Local signup route
 router.post('/signup', authController.signup);
+router.post('/admin-signup', authController.adminSignup);
 
 // Local login route
 router.post('/login', authController.login);
+router.post('/admin-login', authController.adminLogin);
 
 // Logout route
 router.get('/logout', authController.logout);
