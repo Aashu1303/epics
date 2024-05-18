@@ -23,6 +23,24 @@ const adminSchema = new mongoose.Schema({
     },
     required: true,
   },
+  categories: {
+    type: [ 
+      {
+        type: {
+          type: String,
+          required: true,
+        },
+        washType: {
+          type: String,
+          required: true,
+        },
+        rate: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

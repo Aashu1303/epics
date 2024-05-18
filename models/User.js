@@ -24,12 +24,16 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   bucket: [],
+  bucketAmount: {
+    type: Number,
+    default: 0
+  },
   orders: [{
     type: mongoose.Schema.Types.ObjectId,
 		ref: "Order",
   }], 
   room: {
-    type: String,
+    type: Number,
     required: true,
   },
   createdAt: {

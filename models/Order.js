@@ -9,22 +9,24 @@ const orderSchema = new Schema({
     ref: 'User',
     required: true,
   },
-  items: [
-    {
-      type: {
-        type: String,
-        required: true,
+  items: {
+    type: [
+      {
+        type: {
+          type: String,
+          required: true,
+        },
+        washType: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
       },
-      washType: {
-        type: String,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
+    ]
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -38,6 +40,10 @@ const orderSchema = new Schema({
     type: String,
     enum:["accepted", "on-hold", "rejected"],
     default: "on-hold"
+  },
+  amount: {
+    type: Number,
+    default: 0,
   },
   qrCodeData: {
     type: String,

@@ -7,17 +7,30 @@ const User = require('../models/User');
 const Admin = require('../models/Admin');
 
 const orderController = {};
-
 orderController.addToBucket = async(req, res) => {
   try {
     const userId = req.user.userId;
     const newItems = req.body;
     const user = await User.findById(userId);
+    const admin = await Admin.find();
+    const categories = admin[0].categories;
+    let amount = 0;
+    newItems.forEach((item) => {
+      const matchingCategory = categories.find(
+        (category) => category.type === item.type && category.washType === item.washType
+      );
+    
+      if (matchingCategory) {
+        amount += item.quantity * matchingCategory.rate;
+      } 
+    });
 
     for (const newItem of newItems) {
       user.bucket.push(newItem);
     }
+    user.bucketAmount = user.bucketAmount + amount;
     await user.save()
+
     res.status(200).json(user.bucket);
   } catch (error) {
     console.error(error);
@@ -29,11 +42,11 @@ orderController.editItemFromBucket = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    if (user) {
+    const admin = await Admin.find();
+    const categories = admin[0].categories;
+    if (user){
       const index = parseInt(req.params.index);
-
       const updatedObject = req.body;
-
       if (isNaN(index) || index < 0 || index >= user.bucket.length) {
         return res.status(400).json({ message: 'Invalid index provided' });
       }
@@ -41,9 +54,24 @@ orderController.editItemFromBucket = async (req, res) => {
       if (!updatedObject || typeof updatedObject !== 'object' || Object.keys(updatedObject).length === 0) {
         return res.status(400).json({ message: 'Invalid update data provided' });
       }
-      user.bucket[index] = req.body;
-      await user.save();
 
+      const prevQuantity = user.bucket[index].quantity;
+      let prevAmount = 0;
+
+      const item = user.bucket[index];
+      const matchingCategory = categories.find(
+        (category) => category.type === item.type && category.washType === item.washType
+      );
+    
+      let amount = 0;
+      if (matchingCategory) {
+        amount = req.body.quantity * matchingCategory.rate;
+        prevAmount = prevQuantity * matchingCategory.rate;
+      } 
+
+      user.bucket[index] = req.body;
+      user.bucketAmount = user.bucketAmount - prevAmount + amount;
+      await user.save();
       res.json({ message: 'Object updated successfully', bucket: user.bucket });
     } else {
       return res.status(400).json({ message: 'Invalid User' });
@@ -57,6 +85,8 @@ orderController.editItemFromBucket = async (req, res) => {
 orderController.removeFromBucket = async (req, res) => {
   try {
     const userId = req.user.userId;
+    const admin = await Admin.find();
+    const categories = admin[0].categories;
 
     const index = parseInt(req.params.index);
     if (isNaN(index)) {
@@ -72,8 +102,18 @@ orderController.removeFromBucket = async (req, res) => {
       return res.status(400).json({ message: 'Invalid index. Out of bounds.' });
     }
 
-    user.bucket.splice(index, 1);
+    const item = user.bucket[index];
+    const matchingCategory = categories.find(
+      (category) => category.type === item.type && category.washType === item.washType
+    );
+  
+    let amount = 0;
+    if (matchingCategory) {
+      amount += item.quantity * matchingCategory.rate;
+    } 
 
+    user.bucket.splice(index, 1);
+    user.bucketAmount = user.bucketAmount - amount;
     await user.save()
 
     res.status(200).json(user.bucket);
@@ -104,6 +144,7 @@ orderController.submitOrder = async (req, res) => {
     const order = new Order({
       userId,
       items: orderItems,
+      amount: user.bucketAmount,
     });
 
     const savedOrder = await order.save();
@@ -115,6 +156,7 @@ orderController.submitOrder = async (req, res) => {
 
     user.orders.push(order._id);
     user.bucket = [];
+    user.bucketAmount = 0;
     user.save();
 
     savedOrder.save();
