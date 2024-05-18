@@ -13,10 +13,10 @@ const secretKey = process.env.SECRET;
 // Local signup
 authController.signup = async (req, res) => {
   try {
-    const { username, email, password, contact} = req.body;
+    const { username, email, password, contact } = req.body;
     // Check if the email is already registered
-    if (!username || !email || !contact || !password)  {
-      return res.status(500).json({ message:"missing fields"});
+    if (!username || !email || !contact || !password) {
+      return res.status(500).json({ message: "missing fields" });
     }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -66,7 +66,7 @@ authController.login = async (req, res, next) => {
       }
 
       if (!user) {
-        return res.status(401).json({ message: info.message }); 
+        return res.status(401).json({ message: info.message });
       }
 
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
@@ -80,10 +80,10 @@ authController.login = async (req, res, next) => {
 
 authController.adminSignup = async (req, res) => {
   try {
-    const { username, email, password, contact} = req.body;
+    const { username, email, password, contact } = req.body;
     // Check if the email is already registered
-    if (!username || !email || !contact || !password)  {
-      return res.status(500).json({ message:"missing fields"});
+    if (!username || !email || !contact || !password) {
+      return res.status(500).json({ message: "missing fields" });
     }
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
@@ -133,7 +133,7 @@ authController.adminLogin = async (req, res, next) => {
       }
 
       if (!admin) {
-        return res.status(401).json({ message: info.message }); 
+        return res.status(401).json({ message: info.message });
       }
 
       const token = jwt.sign({ userId: admin._id }, secretKey, { expiresIn: '1d' });
