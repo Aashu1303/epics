@@ -11,12 +11,12 @@ const orderController = {};
 
 
 
-orderController.addToBucket = async(req, res) => {
+orderController.addToBucket = async (req, res) => {
   try {
     const userId = req.user.userId;
     const newItems = req.body;
     const user = await User.findById(userId);
-    
+
     for (const newItem of newItems) {
       user.bucket.push(newItem);
     }
@@ -28,11 +28,11 @@ orderController.addToBucket = async(req, res) => {
   }
 }
 
-orderController.editItemFromBucket = async(req, res) => {
+orderController.editItemFromBucket = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    if (user){
+    if (user) {
       const index = parseInt(req.params.index);
 
       const updatedObject = req.body;
@@ -48,7 +48,7 @@ orderController.editItemFromBucket = async(req, res) => {
       await user.save();
 
       res.json({ message: 'Object updated successfully', bucket: user.bucket });
-    }else{
+    } else {
       return res.status(400).json({ message: 'Invalid User' });
     }
   } catch (error) {
@@ -57,7 +57,7 @@ orderController.editItemFromBucket = async(req, res) => {
   }
 }
 
-orderController.removeFromBucket = async(req, res) => {
+orderController.removeFromBucket = async (req, res) => {
   try {
     const userId = req.user.userId;
 
@@ -108,7 +108,7 @@ orderController.submitOrder = async (req, res) => {
       userId,
       items: orderItems,
     });
-    
+
     const savedOrder = await order.save();
     const qrCodeData = JSON.stringify(order._id); // qr generation
     const qrCodeBuffer = await qrcode.toBuffer(qrCodeData);
@@ -135,7 +135,7 @@ orderController.submitOrder = async (req, res) => {
 // pending
 orderController.cancelOrder = async (req, res) => {
 
-} 
+}
 
 // pending
 orderController.markOrderComplete = async (req, res) => {
@@ -149,7 +149,7 @@ orderController.markOrderComplete = async (req, res) => {
     const order = await Order.findByIdAndUpdate(
       orderId,
       { status: true },
-      { new: true } 
+      { new: true }
     );
 
     if (!order) {
@@ -173,7 +173,7 @@ orderController.acceptRejectOrder = async (req, res) => {
         console.log('Order not found');
         return res.status(404).json({ error: "Order not found" });
       }
-  
+
       const user = await User.findById(deletedOrder.userId);
       if (user) {
         user.orders = user.orders.filter(id => id.toString() !== orderId);
@@ -182,14 +182,14 @@ orderController.acceptRejectOrder = async (req, res) => {
       } else {
         console.log('User not found');
       }
-  
+
       return res.status(200).json({ message: "Order rejected" });
     } catch (error) {
       console.error('Error deleting order or finding user:', error);
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }
-  
+
   async function acceptOrder(orderId) {
     try {
       const updatedOrder = await Order.findByIdAndUpdate(
@@ -197,7 +197,7 @@ orderController.acceptRejectOrder = async (req, res) => {
         { $set: { status: "accepted" } },
         { new: true }
       );
-  
+
       if (updatedOrder) {
         return res.status(200).json({ message: "Order status updated successfully" });
       } else {
@@ -211,21 +211,21 @@ orderController.acceptRejectOrder = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    
+
     const orderId = req.params.orderId;
     const orderStatus = req.params.orderStatus;
 
-    if (orderStatus === "accept" || orderStatus === "reject"){
+    if (orderStatus === "accept" || orderStatus === "reject") {
       if (user && user.role === "admin") {
         if (orderStatus === "reject") {
           await rejectOrder(orderId, res);
         } else {
           await acceptOrder(orderId, res);
         }
-      }else{
+      } else {
         return res.status(400).json({ error: "Admin role not verified" });
       }
-    }else{
+    } else {
       return res.status(400).json({ error: "Invalid Status" });
     }
   } catch (error) {
@@ -237,7 +237,8 @@ orderController.acceptRejectOrder = async (req, res) => {
 //pending
 orderController.getAllPendingOrders = async (req, res) => {
   try {
-    const pendingOrders = await Order.find({ status: false }); // Assuming boolean status
+    const userId = req.user.userId;
+    const pendingOrders = await Order.find({ userId, service: "pending" }); // Assuming boolean status
     res.json(pendingOrders);
   } catch (error) {
     console.error(error);
@@ -248,7 +249,8 @@ orderController.getAllPendingOrders = async (req, res) => {
 // pending
 orderController.getAllCompletedOrders = async (req, res) => {
   try {
-    const completedOrders = await Order.find({ status: true }); // Assuming boolean status
+    const userId = req.user.userId;
+    const completedOrders = await Order.find({ userId, service: "completed" }); // Assuming boolean status
     res.json(completedOrders);
   } catch (error) {
     console.error(error);

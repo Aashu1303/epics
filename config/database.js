@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const mongoURI = 'mongodb://localhost:27017/epics';
+const mongoURI = 'mongodb+srv://aashutoshag03:EeNywFp4tAHaWC6s@cluster0.ubxkjer.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 const connectToDatabase = async () => {
   try {
