@@ -108,7 +108,7 @@ authController.login = async (req, res, next) => {
       if (!user) {
         return res.status(401).json({ message: info.message });
       }
-
+      console.log(user)
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
 
       return res.status(201).json({ token });
