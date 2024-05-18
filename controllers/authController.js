@@ -22,7 +22,7 @@ authController.signup = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Email is already registered' });
     }
-    console.log(username, email, password, contact)
+    // console.log(username, email, password, contact)
     if (!password || typeof password != 'string') {
       return res.status(400).json({ message: 'Invalid password' });
     }
@@ -108,7 +108,7 @@ authController.login = async (req, res, next) => {
       if (!user) {
         return res.status(401).json({ message: info.message });
       }
-      console.log(user)
+      // console.log(user)
       const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
 
       return res.status(201).json({ token });
