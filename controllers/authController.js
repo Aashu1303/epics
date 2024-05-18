@@ -3,63 +3,26 @@ const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 require('dotenv').config();
 
 const authController = {};
 
 const secretKey = process.env.SECRET;
 
-// Google OAuth login
-authController.googleLogin = passport.authenticate('google', { scope: ['profile', 'email'] }, (req, res) => {
-  console.log(req);
-});
-
-// Google OAuth callback
-authController.googleCallback = passport.authenticate('google', {
-  failureRedirect: '/',
-  successRedirect: '/dashboard',
-});
-
-// Sign-up with Google OAuth
-authController.signupWithGoogle = async (req, res) => {
-  try {
-    const { id, displayName, emails } = req.user._json;
-    const email = emails[0].value;
-
-    let user = await User.findOne({ 'google.id': id });
-
-    if (!user) {
-      user = new User({
-        username: displayName,
-        email,
-        google: {
-          id,
-          name: displayName,
-          email,
-        },
-      });
-
-      await user.save();
-    }
-
-    res.redirect('/dashboard');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Internal Server Error');
-  }
-};
-
 // Local signup
 authController.signup = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, contact} = req.body;
     // Check if the email is already registered
+    if (!username || !email || !contact || !password)  {
+      return res.status(500).json({ message:"missing fields"});
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email is already registered' });
     }
-
-    // Ensure the password is present and a string before hashing
+    console.log(username, email, password, contact)
     if (!password || typeof password != 'string') {
       return res.status(400).json({ message: 'Invalid password' });
     }
@@ -71,20 +34,18 @@ authController.signup = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role
+      contact,
     });
 
     await newUser.save();
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: newUser._id }, secretKey, { expiresIn: '1d' });
 
-    // Send a JSON response with user information and token
     return res.status(200).json({
       user: {
         username: newUser.username,
         email: newUser.email,
-        // Add other user information as needed
+        contact,
       },
       token,
     });
@@ -101,23 +62,85 @@ authController.login = async (req, res, next) => {
     // Use Passport.authenticate middleware for local strategy
     passport.authenticate('local', (err, user, info) => {
       if (err) {
-        return next(err); // Pass error to Express's error handler
+        return next(err);
       }
 
       if (!user) {
-        return res.status(401).json({ message: info.message }); // Use message provided by Passport
+        return res.status(401).json({ message: info.message }); 
       }
 
-      // Generate a JWT token
-      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-      // **Return the token in the response body as requested:**
-      const userId = user._id
-      return res.json({ token, userId });
+      const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1d' });
 
-
-    })(req, res, next); // Call with Express callback pattern
+      return res.status(201).json({ token });
+    })(req, res, next);
   } catch (error) {
-    // console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+authController.adminSignup = async (req, res) => {
+  try {
+    const { username, email, password, contact} = req.body;
+    // Check if the email is already registered
+    if (!username || !email || !contact || !password)  {
+      return res.status(500).json({ message:"missing fields"});
+    }
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Email is already registered' });
+    }
+    console.log(username, email, password, contact)
+    if (!password || typeof password != 'string') {
+      return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new user
+    const newAdmin = new Admin({
+      username,
+      email,
+      password: hashedPassword,
+      contact,
+    });
+
+    await newAdmin.save();
+
+    const token = jwt.sign({ userId: newAdmin._id }, secretKey, { expiresIn: '1d' });
+
+    return res.status(200).json({
+      admin: {
+        username: newAdmin.username,
+        email: newAdmin.email,
+        contact,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
+};
+
+
+// Local login
+authController.adminLogin = async (req, res, next) => {
+  try {
+    // Use Passport.authenticate middleware for local strategy
+    passport.authenticate('local', (err, admin, info) => {
+      if (err) {
+        return next(err);
+      }
+
+      if (!admin) {
+        return res.status(401).json({ message: info.message }); 
+      }
+
+      const token = jwt.sign({ userId: admin._id }, secretKey, { expiresIn: '1d' });
+
+      return res.status(201).json({ token });
+    })(req, res, next);
+  } catch (error) {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
